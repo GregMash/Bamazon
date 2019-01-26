@@ -128,9 +128,25 @@ function addQuantity() {
             console.log('Please enter a number only for quantity desired to purchase');
             addQuantity();
         } else {
-            console.log(`${res.quantity} added to cart!`);
-            quantityBought.push(res.quantity);
-            shopOrPay();
+            for (let i = 0; i < itemsBought.length; i++) {
+                const query = `SELECT stock_quantity FROM products WHERE product_ID = ${itemsBought[i]}`
+                const updateQuery = `UPDATE products SET stock_quantity = stock_quantity - ${res.quantity} WHERE product_ID = ${itemsBought[i]};`;
+                connection.query(query, (err, result) => {
+                    let quantity = result[0].stock_quantity;
+                    if (quantity - res.quantity >= 0) {
+                        connection.query(updateQuery, (err, response) =>{
+                            console.log(response);
+                            console.log(`Items are in stock! ${res.quantity} added to cart!`);
+                            quantityBought.push(res.quantity);
+                            shopOrPay();
+                        })
+                    } else {
+                        console.log(`Sorry, the store only has ${quantity} left in stock. Please enter a different quantity`);
+                        addQuantity();
+                    }
+                })
+            };
+           
         }
     })
 };
