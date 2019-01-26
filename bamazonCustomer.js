@@ -108,7 +108,7 @@ function confirmCart(item) {
     }).then((res) => {
         if (res.confirm == 'Yes') {
             itemsBought.push(item);
-            addQuantity();
+            addQuantity(item);
         } else {
             displayItems();
         };
@@ -116,7 +116,7 @@ function confirmCart(item) {
 };
 
 // this function handles the quantity of the item the user wishes to buy, checking the stock level, and updating the inventory level
-function addQuantity() {
+function addQuantity(item) {
     inquirer.prompt({
         name: 'quantity',
         type: 'input',
@@ -124,28 +124,28 @@ function addQuantity() {
     }).then((res) => {
         if (isNaN(parseFloat(res.quantity))) {
             console.log('Please enter a number only for quantity desired to purchase');
-            addQuantity();
+            addQuantity(item);
         } else {
-            for (let i = 0; i < itemsBought.length; i++) {
-                const query = `SELECT stock_quantity FROM products WHERE product_ID = ${itemsBought[i]}`
-                const updateQuery = `UPDATE products SET stock_quantity = stock_quantity - ${res.quantity} WHERE product_ID = ${itemsBought[i]};`;
-                connection.query(query, (err, result) => {
-                    let quantity = result[0].stock_quantity;
-                    if (quantity - res.quantity >= 0) {
-                        console.log(`Items are in stock! ${res.quantity} added to cart!`);
-                        quantityBought.push(res.quantity);
-                        connection.query(updateQuery, (err, response) => {
-                        })
-                        shopOrPay();
-                    } else {
-                        console.log(`Sorry, the store only has ${quantity} left in stock. Please enter a different quantity`);
-                        addQuantity();
-                    };
-                })
-            };
+            const query = `SELECT stock_quantity FROM products WHERE product_ID = ${item}`
+            const updateQuery = `UPDATE products SET stock_quantity = stock_quantity - ${res.quantity} WHERE product_ID = ${item};`;
+            connection.query(query, (err, result) => {
+                let quantity = result[0].stock_quantity;
+                if (quantity - res.quantity >= 0) {
+                    console.log(`Items are in stock! ${res.quantity} added to cart!`);
+                    quantityBought.push(res.quantity);
+                    connection.query(updateQuery, (err, response) => {
+                    })
+                    shopOrPay();
+                } else {
+                    console.log(`Sorry, the store only has ${quantity} left in stock. Please enter a different quantity`);
+                    addQuantity(item);
+                };
+            })
         };
     })
 };
+
+
 
 // This function will prompt about continuing to shop or checkout and add the product they select to their cart
 function shopOrPay() {
